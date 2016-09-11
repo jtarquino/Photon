@@ -1,0 +1,5 @@
+Webservice/packages/
+*.bin
+Webservice/JDataService/bin/
+Webservice/JDataService/obj/
+*.pubxml
