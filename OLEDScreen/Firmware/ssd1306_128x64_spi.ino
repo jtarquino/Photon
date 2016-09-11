@@ -1,14 +1,12 @@
-// This #include statement was automatically added by the Particle IDE.
-#include "/Adafruit_SSD1306/Adafruit_SSD1306.h"
-#include "/Adafruit_SSD1306/Adafruit_GFX.h"
+
 /*********************************************************************
 This is an example for our Monochrome OLEDs based on SSD1306 drivers
 
   Pick one up today in the adafruit shop!
   ------> http://www.adafruit.com/category/63_98
 
-This example is for a 128x64 size display using I2C to communicate
-3 pins are required to interface (2 I2C and one reset)
+This example is for a 128x64 size display using SPI to communicate
+4 or 5 pins are required to interface
 
 Adafruit invests time and resources providing this open source code,
 please support Adafruit and open-source hardware by purchasing
@@ -19,8 +17,24 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
-#define OLED_RESET D4
-Adafruit_SSD1306 display(OLED_RESET);
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+/* Uncomment this block to use hardware SPI
+// If using software SPI (the default case):
+#define OLED_MOSI   D0
+#define OLED_CLK    D1
+#define OLED_DC     D2
+#define OLED_CS     D3
+#define OLED_RESET  D4
+Adafruit_SSD1306 display(OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+*/
+// use hardware SPI
+#define OLED_DC     D3
+#define OLED_CS     D4
+#define OLED_RESET  D5
+Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
+
 
 #define NUMFLAKES 10
 #define XPOS 0
@@ -33,6 +47,7 @@ int random(int maxRand) {
 
 #define LOGO16_GLCD_HEIGHT 16
 #define LOGO16_GLCD_WIDTH  16
+
 static const unsigned char logo16_glcd_bmp[] =
 { 0B00000000, 0B11000000,
   0B00000001, 0B11000000,
@@ -55,16 +70,31 @@ static const unsigned char logo16_glcd_bmp[] =
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
+void debugBreakPoint(){
+  Serial.begin(9600);
+  while(!Serial.available()) Particle.process();
+
+  Serial1.begin(9600);  // open serial over TX and RX pins
+
+  Serial.println("Hello Computer");
+  Serial1.println("Hello Serial 1");
+}
+
 void setup()   {
   Serial.begin(9600);
+  //debugBreakPoint();
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);  // initialize with the I2C addr 0x3D (for the 128x64)
+  display.begin(SSD1306_SWITCHCAPVCC);
   // init done
+
+  Serial1.println("Init done");
 
   display.display(); // show splashscreen
   delay(2000);
   display.clearDisplay();   // clears the screen and buffer
+
+  Serial1.println("Splash Screen");
 
   // draw a single pixel
   display.drawPixel(10, 10, WHITE);
