@@ -1,9 +1,11 @@
 #include <rgb-controls.h>
+#include <ArduinoJson.h>
 using namespace RGBControls;
 
 int const refreshTimems = 60000; //every minute
 //int const refreshTimems = 10000; //every 10 seconds
 bool isDataReceived = false;
+bool isFirstTimeInTheLoop = true;
 
 // create a software timer to get new data every minute
 Timer refreshTimer(refreshTimems, getStatusData);
@@ -20,17 +22,22 @@ void setup()
 {
   led.off();
   currentColor = white;
-  //serialSetupForDebugging();
-    // start the data retrieval timer
+  serialSetupForDebugging();
+  //debugBreakPoint();
+  // start the data retrieval timer
   refreshTimer.start();
   //subscribe to the response(callback) of the webhook
   Particle.subscribe("hook-response/get_LedData/", getStatusDataCallBack, MY_DEVICES);
   // Exposes the web api to change the color by demand
-  Particle.function("setRGBColor",setRGBColor);
-  //initializes the first value of the led
-  getStatusData();
+  Particle.function("setRGBColor", setRGBColor);
+  //Expose api to force a refresh
+  Particle.function("refresh", triggerRefresh);
 }
 
+int triggerRefresh(String parameter){
+  getStatusData();
+  return 1;
+}
 // Enables the serial port to debug connected to USB in the serial port
 void serialSetupForDebugging(){
   Serial.begin(9600);   // open serial over USB
@@ -41,6 +48,11 @@ void loop() {
   // Fade the light between red and blue every second
   if (!isDataReceived){
     led.flash(currentColor);
+    if(isFirstTimeInTheLoop)
+    {
+      getStatusData();
+      isFirstTimeInTheLoop = false;
+    }
   }
   led.fade(currentColor, blue, 1000);
 }
@@ -62,17 +74,35 @@ void getStatusDataCallBack(String name, String data){
 
   fullResponse += data;
   if (isResponseCompleted){
+    Serial.println(fullResponse);
     isDataReceived = true;
     String color = getColorFromJSON(fullResponse);
     setLedColorFromString(color);
+    parseJsonAndPrint(fullResponse);
+    
     fullResponse = "";
   }
 }
 
+String parseJsonAndPrint(String jsondData){
+  char *json = &jsondData[0u];
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  Serial.println(">>>>>>>>>>>>>>>>>Buffer Size");
+  Serial.println(jsonBuffer.size());
+  if (root.success()) {
+    Serial.println(">>>>>>>>>>>>>>>>>Good root");
+     root.prettyPrintTo(Serial);
+     Serial.println("---------color");
+     String color = root["LedColor"].asString();
+     Serial.println(color);
+  }
+  Serial.println(">>>>>>>>>>>>>>>>>Done Print");
+  free(json);
+}
 
 String getColorFromJSON(String jsonData){
   // The JSON portion for the ledcolor is expected in  the following format {"LedColor":"red","LabRunData":...
-  Serial.println(jsonData);
   String ledColorType = String("LedColor");
   int indexLedColor = jsonData.indexOf(ledColorType);
   indexLedColor +=  ledColorType.length();

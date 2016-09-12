@@ -11,6 +11,7 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using JDataService.DataService;
 using JDataService.Models;
+using System.Text;
 
 namespace JDataService.Controllers
 {
@@ -31,7 +32,16 @@ namespace JDataService.Controllers
             else
                 ledData.LedColor = "green";
 
-            ledData.LabRunData = labRunData.ToList();
+            StringBuilder message = new StringBuilder();
+            bool firstMessage = true;
+            foreach (var lab in labRunData)
+            {
+                if (!firstMessage)
+                    message.Append(" -- ");
+                message.Append(String.Format("{0} Inv {1}, Fail {2}, Prob {3}", lab.FriendlyName, lab.InvestigateJobcount , lab.TestFailJobCount , lab.ProblemJobCount));
+                firstMessage = false;
+            }
+            ledData.Message = message.ToString();
 
             if (ledData == null)
             {
