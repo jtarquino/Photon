@@ -1,8 +1,8 @@
-#include <rgb-controls.h>
-#include <ArduinoJson.h>
-using namespace RGBControls;
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
+#include <rgb-controls.h>
+using namespace RGBControls;
+
 // use hardware SPI
 #define OLED_DC     D3
 #define OLED_CS     D4
@@ -108,33 +108,12 @@ void getStatusDataCallBack(String name, String data){
     isDataReceived = true;
     String color = getColorFromJSON(fullResponse);
     setLedColorFromString(color);
-    parseJsonAndPrint(fullResponse);
     fullResponse = "";
   }
 }
 
-String parseJsonAndPrint(String jsondData){
-  char *json = &jsondData[0u];
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  Serial.println(">>>>>>>>>>>>>>>>>Buffer Size");
-  Serial.println(jsonBuffer.size());
-  if (root.success()) {
-    Serial.println(">>>>>>>>>>>>>>>>>Good root");
-     root.prettyPrintTo(Serial);
-     Serial.println("---------color");
-     String color = root["LedColor"].asString();
-     Serial.println(color);
-
-     setLedColorFromString(color);
-     messageForScreen = root["Message"].asString();
-  }
-  Serial.println(">>>>>>>>>>>>>>>>>Done Print");
-  free(json);
-}
-
 String getColorFromJSON(String jsonData){
-  // The JSON portion for the ledcolor is expected in  the following format {"LedColor":"red","LabRunData":...
+  // The JSON portion for the ledcolor is expected in  the following format {"LedColor":"red","Message":...
   String ledColorType = String("LedColor");
   int indexLedColor = jsonData.indexOf(ledColorType);
   indexLedColor +=  ledColorType.length();
