@@ -6,6 +6,7 @@
 #define OLED_CS     D4
 #define OLED_RESET  D5
 Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
+String messageForScreen = "Loading data....";
 
 int  x, minX; // variables for scrolling code
 
@@ -23,7 +24,7 @@ void setup() {
 void loop() {
   display.clearDisplay();
   display.setCursor(x/2, 7);
-  display.print("Hello World");
+  display.print(messageForScreen);
   display.display();
   if(--x < minX) x = display.width()*2;
 }

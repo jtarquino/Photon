@@ -41,7 +41,8 @@ namespace JDataService.Controllers
                 message.Append(String.Format("{0} Inv {1}, Fail {2}, Prob {3}", lab.FriendlyName, lab.InvestigateJobcount , lab.TestFailJobCount , lab.ProblemJobCount));
                 firstMessage = false;
             }
-            ledData.Message = message.ToString();
+            //ledData.Message = message.ToString();
+            ledData.Message = "m";
 
             if (ledData == null)
             {

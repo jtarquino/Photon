@@ -1,11 +1,21 @@
 #include <rgb-controls.h>
 #include <ArduinoJson.h>
 using namespace RGBControls;
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+// use hardware SPI
+#define OLED_DC     D3
+#define OLED_CS     D4
+#define OLED_RESET  D5
+Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
+
+int  x, minX; // variables for scrolling code
 
 int const refreshTimems = 60000; //every minute
 //int const refreshTimems = 10000; //every 10 seconds
 bool isDataReceived = false;
 bool isFirstTimeInTheLoop = true;
+String messageForScreen = "Loading data....";
 
 // create a software timer to get new data every minute
 Timer refreshTimer(refreshTimems, getStatusData);
@@ -22,6 +32,7 @@ void setup()
 {
   led.off();
   currentColor = white;
+  initializeScreen();
   serialSetupForDebugging();
   //debugBreakPoint();
   // start the data retrieval timer
@@ -34,6 +45,16 @@ void setup()
   Particle.function("refresh", triggerRefresh);
 }
 
+void initializeScreen(){
+  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
+  display.begin(SSD1306_SWITCHCAPVCC);
+
+  display.setTextSize(7);       // text size
+  display.setTextColor(WHITE); // text color
+  display.setTextWrap(false); // turn off text wrapping so we can do scrolling
+  x    = display.width(); // set scrolling frame to display width
+  minX = -1500; // 630 = 6 pixels/character * text size 7 * 15 characters * 2x slower
+}
 int triggerRefresh(String parameter){
   getStatusData();
   return 1;
@@ -54,7 +75,16 @@ void loop() {
       isFirstTimeInTheLoop = false;
     }
   }
-  led.fade(currentColor, blue, 1000);
+  led.fade(currentColor, blue, 500);
+  refreshScreen();
+}
+
+void refreshScreen(){
+  display.clearDisplay();
+  display.setCursor(x/2, 7);
+  display.print(messageForScreen);
+  display.display();
+  if(--x < minX) x = display.width()*2;
 }
 
 void getStatusData(){
@@ -79,7 +109,6 @@ void getStatusDataCallBack(String name, String data){
     String color = getColorFromJSON(fullResponse);
     setLedColorFromString(color);
     parseJsonAndPrint(fullResponse);
-    
     fullResponse = "";
   }
 }
@@ -96,6 +125,9 @@ String parseJsonAndPrint(String jsondData){
      Serial.println("---------color");
      String color = root["LedColor"].asString();
      Serial.println(color);
+
+     setLedColorFromString(color);
+     messageForScreen = root["Message"].asString();
   }
   Serial.println(">>>>>>>>>>>>>>>>>Done Print");
   free(json);
