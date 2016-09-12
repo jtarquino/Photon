@@ -8,6 +8,6 @@ namespace JDataService.Models
     public class LabRunState
     {
         public string LedColor { get; set; }
-        public List<LabRunResult> LabRunData { get; set; }
+        public string Message { get; set; }
     }
 }
