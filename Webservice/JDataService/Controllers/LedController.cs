@@ -25,24 +25,29 @@ namespace JDataService.Controllers
         public async Task<IHttpActionResult> GetLedData()
         {
             var labRunData = (await db.GetLabRunResults()).ToList();
-
+            string message;
             var ledData = new LabRunState();
             if (labRunData.Count() > 0)
-                ledData.LedColor = "red";
-            else
-                ledData.LedColor = "green";
-
-            StringBuilder message = new StringBuilder();
-            bool firstMessage = true;
-            foreach (var lab in labRunData)
             {
-                if (!firstMessage)
-                    message.Append(" -- ");
-                message.Append(String.Format("{0} Inv {1}, Fail {2}, Prob {3}", lab.FriendlyName, lab.InvestigateJobcount , lab.TestFailJobCount , lab.ProblemJobCount));
-                firstMessage = false;
+                ledData.LedColor = "red";
+                StringBuilder messageBuilder = new StringBuilder();
+                bool firstMessage = true;
+                foreach (var lab in labRunData)
+                {
+                    if (!firstMessage)
+                        messageBuilder.Append(" -- ");
+                    messageBuilder.Append(String.Format("{0} Inv {1}, Fail {2}, Prob {3}", lab.FriendlyName, lab.InvestigateJobcount, lab.TestFailJobCount, lab.ProblemJobCount));
+                    firstMessage = false;
+                }
+                message = messageBuilder.ToString();
             }
-            //ledData.Message = message.ToString();
-            ledData.Message = "m";
+            else
+            {
+                ledData.LedColor = "green";
+                message = "Ok";
+            }
+
+            ledData.Message = message;
 
             if (ledData == null)
             {

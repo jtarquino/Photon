@@ -83,11 +83,11 @@ namespace RGBControls {
       fade(b, a, duration);
   }
 
-  void Led::fade(Color c1, Color c2, int duration) {
+  void Led::fade(Color c1, Color c2, int duration, int delay) {
     float steps = duration / 25;
     Color nextColor = c1.lerp(c2, _step / steps);
     setColor(nextColor);
-    delay(25);
+    delay(delay);
     step(0, steps);
   }
 

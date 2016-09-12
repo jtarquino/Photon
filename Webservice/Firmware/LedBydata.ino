@@ -15,6 +15,9 @@ int const refreshTimems = 60000; //every minute
 //int const refreshTimems = 10000; //every 10 seconds
 bool isDataReceived = false;
 bool isFirstTimeInTheLoop = true;
+int const fontSize = 4;
+int const screenHeight = 64;
+int const screenWidth = 128;
 String messageForScreen = "Loading data....";
 
 // create a software timer to get new data every minute
@@ -43,20 +46,29 @@ void setup()
   Particle.function("setRGBColor", setRGBColor);
   //Expose api to force a refresh
   Particle.function("refresh", triggerRefresh);
+
+  Particle.function("setText", setText);
 }
 
 void initializeScreen(){
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC);
 
-  display.setTextSize(7);       // text size
+  display.setTextSize(fontSize);       // text size
   display.setTextColor(WHITE); // text color
   display.setTextWrap(false); // turn off text wrapping so we can do scrolling
   x    = display.width(); // set scrolling frame to display width
-  minX = -1500; // 630 = 6 pixels/character * text size 7 * 15 characters * 2x slower
+  minX = -1 * 6 * fontSize * 15 * 2; // 630 = 6 pixels/character * text size 7 * 15 characters * 2x slower
 }
+
 int triggerRefresh(String parameter){
   getStatusData();
+  return 1;
+}
+
+int setText(String text){
+  minX = -1 * 6 * fontSize * text.length() * 2;
+  messageForScreen = text;
   return 1;
 }
 // Enables the serial port to debug connected to USB in the serial port
@@ -75,16 +87,17 @@ void loop() {
       isFirstTimeInTheLoop = false;
     }
   }
-  led.fade(currentColor, blue, 500);
+  led.fade(currentColor, blue, 1000, 0);
   refreshScreen();
 }
 
 void refreshScreen(){
   display.clearDisplay();
-  display.setCursor(x/2, 7);
+  display.setCursor(x/2, fontSize);
   display.print(messageForScreen);
   display.display();
-  if(--x < minX) x = display.width()*2;
+  if(--x < minX)
+    x = display.width()*2;
 }
 
 void getStatusData(){
@@ -106,21 +119,36 @@ void getStatusDataCallBack(String name, String data){
   if (isResponseCompleted){
     Serial.println(fullResponse);
     isDataReceived = true;
-    String color = getColorFromJSON(fullResponse);
-    setLedColorFromString(color);
+    parseJsonAndSetValues(fullResponse);
     fullResponse = "";
   }
 }
 
-String getColorFromJSON(String jsonData){
-  // The JSON portion for the ledcolor is expected in  the following format {"LedColor":"red","Message":...
-  String ledColorType = String("LedColor");
-  int indexLedColor = jsonData.indexOf(ledColorType);
-  indexLedColor +=  ledColorType.length();
-  indexLedColor += 3; // counts for the closing quote the colon and the open quote ":"
-  int indexLastQuote = jsonData.indexOf("\"",indexLedColor);
-  String ledColor = jsonData.substring(indexLedColor, indexLastQuote);
-  return ledColor;
+void parseJsonAndSetValues(String jsonString){
+  char *json = &jsonString[0u];
+
+  String color;
+  String message;
+
+
+  char *contents = strtok(json, "{}");//remove '{' and  '}' : note that is not included in the content
+  char key[128], value[1000];
+  int len;
+  while(2==sscanf(contents, "\"%127[^\"]\":\"%999[^\"]\",%n", key, value, &len)){
+    if(strcmp(key, "LedColor")==0)
+      color = value;
+    if(strcmp(key, "Message")==0)
+        message = value;
+    contents += len;
+  }
+
+  Serial.println("Color: " + color);
+  Serial.println("Message: " + message);
+
+  setLedColorFromString(color);
+  minX = -1 * 6 * fontSize * message.length() * 2; //  6 pixels/character * text size  * characters * 2x slower
+  messageForScreen = message;
+
 }
 
 int setRGBColor(String rgbColor){
