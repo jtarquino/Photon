@@ -44,7 +44,7 @@ namespace JDataService.Controllers
             else
             {
                 ledData.LedColor = "green";
-                message = "Ok";
+                message = "Everything is awesome";
             }
 
             ledData.Message = message;
