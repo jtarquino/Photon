@@ -18,6 +18,7 @@ bool isFirstTimeInTheLoop = true;
 int const fontSize = 4;
 int const screenHeight = 64;
 int const screenWidth = 128;
+bool isGreenState = false;
 String messageForScreen = "Loading data....";
 
 // create a software timer to get new data every minute
@@ -87,7 +88,8 @@ void loop() {
       isFirstTimeInTheLoop = false;
     }
   }
-  led.fade(currentColor, blue, 1000, 0);
+  if(!isGreenState)
+    led.fade(currentColor, blue, 1000, 0);
   refreshScreen();
 }
 
@@ -168,10 +170,13 @@ void setLedColorFromString(String color){
   if(color=="red")
   {
     currentColor = red;
+    isGreenState = false;
   }
   else if(color=="green")
   {
     currentColor = green;
+    isGreenState = true;
+    led.setColor(currentColor);
   }
   else if (color=="blue")
   {

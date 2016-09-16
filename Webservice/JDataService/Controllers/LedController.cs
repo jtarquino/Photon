@@ -28,6 +28,7 @@ namespace JDataService.Controllers
             string message;
             var ledData = new LabRunState();
             if (labRunData.Count() > 0)
+            //if (1 != 1)
             {
                 ledData.LedColor = "red";
                 StringBuilder messageBuilder = new StringBuilder();
@@ -46,6 +47,9 @@ namespace JDataService.Controllers
                 ledData.LedColor = "green";
                 message = "Everything is awesome";
             }
+
+            if (message.Length >= 1000)
+                message = message.Substring(0, 1000);
 
             ledData.Message = message;
 
