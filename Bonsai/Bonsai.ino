@@ -87,13 +87,13 @@ void serialSetupForDebugging(){
 void loop() {
   //_led.fade(currentColor, blue, 1000, 0);
   //_led.flash(currentColor);
-  _led.setColor(currentColor);
+  //_led.setColor(currentColor); //shows color
   //currentColor = green;
   _humidity = analogRead(_humiditySensor);
   setText(String(_humidity));
   Particle.publish("bonsaiHumidity", String(_humidity), PRIVATE);
   refreshScreen();
-  delay(10000); // get data every ten seconds
+  delay(60000); // get data every minute
 }
 
 void getStatusData(){
