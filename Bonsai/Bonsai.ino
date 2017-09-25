@@ -34,6 +34,7 @@ Color white(255,255,255);
 int _humidity;
 int _humiditySensor = A0;
 int _power = A1;
+int _currentIteration = 0;
 
 void setup()
 {
@@ -91,9 +92,22 @@ void loop() {
   //currentColor = green;
   _humidity = analogRead(_humiditySensor);
   setText(String(_humidity));
-  Particle.publish("bonsaiHumidity", String(_humidity), PRIVATE);
   refreshScreen();
-  delay(60000); // get data every minute
+  publishHumidity();
+  delay(5000); // get data every 5 seconds
+}
+
+void publishHumidity(){
+  //publish data every 12 cycles (1 minute)
+  if (_currentIteration < 12)
+  {
+    _currentIteration++;
+  }
+  else
+  {
+    Particle.publish("bonsaiHumidity", String(_humidity), PRIVATE);
+    _currentIteration = 0;
+  }
 }
 
 void getStatusData(){
